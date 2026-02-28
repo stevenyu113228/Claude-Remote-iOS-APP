@@ -120,5 +120,4 @@ struct MainView: View {
             }
         }
     }
-
 }

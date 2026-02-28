@@ -36,7 +36,6 @@ struct InputBarView: View {
                 .lineLimit(1...4)
                 .autocorrectionDisabled(true)
                 .textInputAutocapitalization(.never)
-                .keyboardType(.asciiCapable)
                 .onSubmit { sendText() }
 
             // Send button

@@ -28,6 +28,8 @@ struct TerminalContainerView: UIViewRepresentable {
         terminal.getTerminal().options.scrollback = 10000
 
         // Disable SwiftTerm's native UIScrollView scrolling and mouse reporting
+        // allowMouseReporting = false makes SwiftTerm's tap/longpress gestures
+        // do text selection + context menu instead of sending mouse events to tmux
         terminal.isScrollEnabled = false
         terminal.allowMouseReporting = false
         terminal.panGestureRecognizer.isEnabled = false
@@ -58,20 +60,34 @@ struct TerminalContainerView: UIViewRepresentable {
     }
 
     private func replaceGestures(on terminal: ClaudeTerminalView, coordinator: Coordinator) {
-        // Remove ALL gesture recognizers (taps, long press, any SwiftTerm gestures)
+        // Identify SwiftTerm's gestures to selectively replace
+        var swiftTermDoubleTap: UIGestureRecognizer?
+
         if let gestures = terminal.gestureRecognizers {
             for gesture in gestures {
                 // Keep UIScrollView's built-in pan (just disabled)
                 if gesture === terminal.panGestureRecognizer { continue }
-                terminal.removeGestureRecognizer(gesture)
+
+                if let tap = gesture as? UITapGestureRecognizer, tap.numberOfTapsRequired == 1 {
+                    // Remove SwiftTerm's single tap — we replace with toggle-keyboard tap
+                    terminal.removeGestureRecognizer(gesture)
+                } else if let tap = gesture as? UITapGestureRecognizer, tap.numberOfTapsRequired == 2 {
+                    // Keep double tap (word selection)
+                    swiftTermDoubleTap = tap
+                }
+                // Keep long press (context menu with Copy/Paste)
+                // Keep triple tap (line selection)
             }
         }
 
-        // Single-tap: just becomeFirstResponder
+        // Our single tap: toggle keyboard
         let singleTap = UITapGestureRecognizer(target: coordinator, action: #selector(Coordinator.handleSingleTap(_:)))
+        if let dt = swiftTermDoubleTap {
+            singleTap.require(toFail: dt)
+        }
         terminal.addGestureRecognizer(singleTap)
 
-        // Pan: send mouse scroll events to tmux via raw SGR escape sequences
+        // Our pan: scroll (vertical) and cursor movement (horizontal)
         let pan = UIPanGestureRecognizer(target: coordinator, action: #selector(Coordinator.handlePan(_:)))
         terminal.addGestureRecognizer(pan)
     }
@@ -94,7 +110,6 @@ struct TerminalContainerView: UIViewRepresentable {
             } else {
                 terminal.becomeFirstResponder()
             }
-            UIMenuController.shared.hideMenu()
         }
 
         @objc func handlePan(_ gesture: UIPanGestureRecognizer) {
