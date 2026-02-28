@@ -13,5 +13,8 @@ xcuserdata/
 # XcodeGen (regenerated from project.yml)
 ClaudeRemote.xcodeproj/
 
+# Build output
+build/
+
 # Duplicate of xcodeproj lockfile
 Package.resolved
