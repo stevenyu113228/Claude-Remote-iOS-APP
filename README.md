@@ -1,91 +1,76 @@
 # Slave Monitor
 
-A native iOS terminal client for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) running on a remote Mac or Linux machine. Connect to multiple devices over Tailscale VPN, manage tmux sessions, and interact with Claude Code from your iPhone.
+> *Cyber Slave Surveillance System* — Monitor your AI slaves from the palm of your hand.
+
+You've got Claude Code working for you on remote machines 24/7. But how do you keep an eye on your digital workforce while you're away from the desk? Easy — you pull out your phone and open Slave Monitor.
+
+This is an iOS app that lets you watch, command, and manage Claude Code instances running on your Mac / Linux machines through [Tailscale](https://tailscale.com/) VPN. Think of it as a security camera for your AI sweatshop.
 
 ![Demo](img/img.jpg)
 
-## Features
+## What Can It Do
 
-- **Native Terminal** — Full terminal emulator powered by [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm), with WebSocket connection to [ttyd](https://github.com/tsl0922/ttyd)
-- **Multi-Device Profiles** — Save and switch between multiple remote machines, each with independent connections
-- **Tmux Tab Management** — View, switch, create, rename, and close tmux windows directly from the app
-- **Quick Keys** — Compact button bar for common terminal keys (`/`, `Tab`, `Esc`, `Enter`, `Ctrl+C`, `Ctrl+O`, `Ctrl+U`, arrow keys)
-- **Dictation & Text Input** — Type or dictate commands with iOS native input, auto-submit on Enter
-- **Photo Upload** — Send images to the remote machine for Claude Code to analyze
-- **Auto-Reconnect** — Exponential backoff reconnection with background/foreground lifecycle handling
-- **Quick Commands** — Preset command shortcuts for frequent operations
+- **Real-time Terminal** — Watch your slaves type in real-time. Full terminal emulator powered by [SwiftTerm](https://github.com/migueldeicaza/SwiftTerm), connected via WebSocket to [ttyd](https://github.com/tsl0922/ttyd)
+- **Multi-Slave Management** — Register multiple machines, switch between them with one tap. Each slave maintains its own independent connection
+- **Tmux Window Control** — Assign multiple tasks to the same machine. View, switch, create, rename, and close tmux windows without touching a keyboard
+- **Quick Keys** — A compact control panel for when you need to intervene: `Ctrl+C` to stop a runaway slave, `Enter` to approve, arrow keys to navigate
+- **Voice Commands** — Too lazy to type? Dictate your orders. iOS speech-to-text does the rest
+- **Photo Upload** — Send screenshots or images to the remote machine for Claude to analyze. Because sometimes you need to show, not tell
+- **Auto-Reconnect** — Slaves don't get to disconnect. If the connection drops, exponential backoff keeps retrying until it's back
+- **Quick Commands** — One-tap preset commands for frequent orders
 
-## Server Setup
+## Prerequisites
 
-This app requires the companion server running on your remote machine:
+Your slaves need to be set up first. Install the server-side components on each remote machine:
 
-**[Claude-Code-Remote](https://github.com/stevenyu113228/Claude-Code-Remote)** — Sets up ttyd (terminal server on port 7681) and a FastAPI backend (on port 8080) inside a tmux session, all bound to your Tailscale IP.
+**[Claude-Code-Remote](https://github.com/stevenyu113228/Claude-Code-Remote)** — Deploys ttyd (terminal server on port 7681) and a FastAPI backend (on port 8080) inside a tmux session, all bound to your Tailscale IP.
 
-Follow the server repo's setup instructions first, then connect from this app using your Tailscale IP.
+Set up the server, then connect from this app. Your slaves are ready to be monitored.
 
-## Install (Pre-built IPA)
+## Install (Sideload IPA)
 
-If you don't have an Apple Developer account, you can sideload the pre-built IPA using [AltStore](https://altstore.io/):
+No Apple Developer tax needed. Sideload using [AltStore](https://altstore.io/):
 
 1. Install **AltServer** on your Mac/PC ([download](https://altstore.io/))
-2. Connect your iPhone via USB and install **AltStore** to your phone through AltServer
-3. Download the latest `SlaveMonitor.ipa` from [Releases](https://github.com/stevenyu113228/Slave-Monitor-iOS/releases)
-4. Open the downloaded IPA file and choose **Open with AltStore**
-   - Or: open **AltStore** on your phone → **My Apps** → **+** → select the IPA
-5. AltStore will sign and install the app automatically
-
-AltServer running in the background will auto-refresh the signing every 7 days.
+2. Connect your iPhone via USB → install **AltStore** to your phone
+3. Download `SlaveMonitor.ipa` from [Releases](https://github.com/stevenyu113228/Slave-Monitor-iOS/releases)
+4. Open the IPA → choose **Open with AltStore**
+   - Or: **AltStore** → **My Apps** → **+** → select the IPA
+5. Done. AltStore auto-refreshes the signing every 7 days
 
 ## Build from Source
+
+For those who trust no one (respect).
 
 ### Requirements
 
 - iOS 17.0+
 - Xcode 16.0+
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen)
-- [Tailscale](https://tailscale.com/) installed on both your iPhone and remote machine
+- [Tailscale](https://tailscale.com/) on both your iPhone and the slave machines
 
-### 1. Clone the repo
+### Steps
 
 ```bash
 git clone https://github.com/stevenyu113228/Slave-Monitor-iOS.git
 cd Slave-Monitor-iOS
-```
-
-### 2. Generate Xcode project
-
-```bash
-brew install xcodegen   # if not installed
+brew install xcodegen    # if needed
 xcodegen generate
-```
-
-This generates `SlaveMonitor.xcodeproj` from `project.yml`.
-
-### 3. Open in Xcode
-
-```bash
 open SlaveMonitor.xcodeproj
 ```
 
-### 4. Configure signing
+In Xcode:
+1. Select **SlaveMonitor** target → **Signing & Capabilities**
+2. Pick your Team (free Apple ID works)
+3. Change Bundle Identifier to something unique (e.g. `com.yourname.slavemonitor`)
+4. **Cmd+R** → build and deploy
 
-- Select the **SlaveMonitor** target
-- Go to **Signing & Capabilities**
-- Select your **Team** (Apple Developer account or free Apple ID)
-- Update the **Bundle Identifier** to something unique (e.g. `com.yourname.slavemonitor`)
-
-### 5. Build and run
-
-- Connect your iPhone or select a simulator
-- Press **Cmd+R** to build and run
-
-### Command-line build (optional)
+<details>
+<summary>Command-line build (headless)</summary>
 
 ```bash
-# Find your Team ID
 security find-certificate -c "Apple Development" -p | openssl x509 -noout -subject
 
-# Build for a connected device
 xcodebuild -project SlaveMonitor.xcodeproj \
   -scheme SlaveMonitor \
   -destination 'generic/platform=iOS' \
@@ -93,33 +78,35 @@ xcodebuild -project SlaveMonitor.xcodeproj \
   -allowProvisioningUpdates \
   build
 ```
+</details>
 
 ## Usage
 
-1. Make sure the [server](https://github.com/stevenyu113228/Claude-Code-Remote) is running on your remote machine
-2. Open the app and tap **+** to add a device
-3. Enter a name, your machine's Tailscale IP, and ports (defaults: ttyd 7681, API 8080)
-4. Tap **Save** — the app connects automatically
-5. Use the **device tab bar** to switch between machines
-6. Use the **tmux tab bar** to manage terminal windows
+1. Start the [server](https://github.com/stevenyu113228/Claude-Code-Remote) on your remote machine(s)
+2. Open the app → tap **+** → register a slave (name, Tailscale IP, ports)
+3. Tap **Save** → connection established, surveillance begins
+4. **Device tab bar** — switch between slaves
+5. **Tmux tab bar** — switch between tasks on the same slave
+6. Sit back and watch them work
 
 ## Architecture
 
 ```
-iPhone App                          Remote Machine (Mac/Linux)
+  Your Phone                         Slave Machine (Mac/Linux)
 ┌──────────────────┐               ┌──────────────────────────┐
-│  DeviceTabBar    │               │  tmux session            │
-│  ┌────────────┐  │  Tailscale   │  ├── Claude Code window  │
-│  │TerminalView│◄─┼──WebSocket──►│  │   (ttyd :7681)        │
+│  Device Tabs     │               │  tmux session            │
+│  ┌────────────┐  │  Tailscale   │  ├── Claude Code (slave) │
+│  │  Terminal  │◄─┼──WebSocket──►│  │   (ttyd :7681)        │
 │  │ (SwiftTerm)│  │   :7681      │  └── ...                 │
 │  └────────────┘  │               │                          │
-│  TmuxTabBar      │               │  FastAPI backend         │
-│  QuickKeys       │◄──REST API──►│  (:8080)                 │
-│  InputBar        │   :8080       │  ├── /tmux/*             │
-│  (dictation/photo│               │  └── /upload             │
+│  Tmux Tabs       │               │  FastAPI backend         │
+│  Quick Keys      │◄──REST API──►│  (:8080)                 │
+│  Input Bar       │   :8080       │  ├── /tmux/*             │
+│  (voice/photo)   │               │  └── /upload             │
 └──────────────────┘               └──────────────────────────┘
+        Boss                              Slave(s)
 ```
 
 ## License
 
-MIT
+MIT — Use it however you want. Your slaves have no say in this.
