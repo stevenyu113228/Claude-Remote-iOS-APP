@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct TmuxTabBar: View {
-    @Environment(AppState.self) private var appState
+    let apiClient: APIClient
+    let tmuxSession: String
     @State private var windows: [TmuxWindow] = []
     @State private var timer: Timer?
     @State private var renameTarget: TmuxWindow?
@@ -18,7 +19,7 @@ struct TmuxTabBar: View {
                 // New window button
                 Button {
                     Task {
-                        try? await appState.apiClient.newWindow()
+                        try? await apiClient.newWindow()
                         await refreshWindows()
                     }
                 } label: {
@@ -53,7 +54,7 @@ struct TmuxTabBar: View {
     private func tabButton(for window: TmuxWindow) -> some View {
         Button {
             Task {
-                try? await appState.apiClient.selectWindow(index: window.index)
+                try? await apiClient.selectWindow(index: window.index)
                 await refreshWindows()
             }
         } label: {
@@ -84,7 +85,7 @@ struct TmuxTabBar: View {
             }
             Button("Close Window", role: .destructive) {
                 Task {
-                    try? await appState.apiClient.closeWindow(index: window.index)
+                    try? await apiClient.closeWindow(index: window.index)
                     await refreshWindows()
                 }
             }
@@ -106,7 +107,7 @@ struct TmuxTabBar: View {
     @MainActor
     private func refreshWindows() async {
         do {
-            windows = try await appState.apiClient.listWindows()
+            windows = try await apiClient.listWindows()
         } catch {
             // Silently ignore — will retry on next poll
         }
@@ -116,8 +117,8 @@ struct TmuxTabBar: View {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         // Send rename command via exec endpoint
-        try? await appState.apiClient.execCommand(
-            "tmux rename-window -t \(appState.tmuxSession):\(window.index) '\(trimmed)'"
+        try? await apiClient.execCommand(
+            "tmux rename-window -t \(tmuxSession):\(window.index) '\(trimmed)'"
         )
         await refreshWindows()
     }

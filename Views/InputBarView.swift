@@ -2,7 +2,7 @@ import SwiftUI
 
 struct InputBarView: View {
     let client: TtydClient
-    @Environment(AppState.self) private var appState
+    let apiClient: APIClient
     @State private var text = ""
     @State private var showPhotoPicker = false
     @State private var showQuickCommands = false
@@ -63,10 +63,10 @@ struct InputBarView: View {
         .padding(.vertical, 6)
         .background(Color(red: 0.18, green: 0.18, blue: 0.18))
         .sheet(isPresented: $showPhotoPicker) {
-            PhotoPickerView(client: client)
+            PhotoPickerView(client: client, apiClient: apiClient)
         }
         .sheet(isPresented: $showQuickCommands) {
-            QuickCommandsView()
+            QuickCommandsView(apiClient: apiClient)
         }
     }
 

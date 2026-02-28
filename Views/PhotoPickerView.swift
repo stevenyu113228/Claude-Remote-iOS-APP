@@ -3,7 +3,7 @@ import PhotosUI
 
 struct PhotoPickerView: View {
     let client: TtydClient
-    @Environment(AppState.self) private var appState
+    let apiClient: APIClient
     @Environment(\.dismiss) private var dismiss
     @State private var selectedItems: [PhotosPickerItem] = []
     @State private var uploadStatus = ""
@@ -78,7 +78,7 @@ struct PhotoPickerView: View {
 
             uploadStatus = "Uploading \(done + 1)/\(total)..."
             do {
-                let result = try await appState.apiClient.uploadImage(compressed, name: name)
+                let result = try await apiClient.uploadImage(compressed, name: name)
                 if let path = result.path {
                     uploadedPaths.append(path)
                 }

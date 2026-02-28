@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct QuickCommandsView: View {
-    @Environment(AppState.self) private var appState
+    let apiClient: APIClient
     @Environment(\.dismiss) private var dismiss
     @State private var commands: [QuickCommand] = []
     @State private var showAddSheet = false
@@ -84,11 +84,11 @@ struct QuickCommandsView: View {
     private func executeCommand(_ command: String, newWindow: Bool) {
         Task {
             if newWindow {
-                try? await appState.apiClient.newWindow()
+                try? await apiClient.newWindow()
                 // Small delay for window creation
                 try? await Task.sleep(for: .milliseconds(300))
             }
-            try? await appState.apiClient.execCommand(command)
+            try? await apiClient.execCommand(command)
             dismiss()
         }
     }
